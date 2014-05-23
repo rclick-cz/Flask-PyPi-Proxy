@@ -1,0 +1,21 @@
+{% extends "bootstrap/base.html" %}
+
+{% block styles %}
+{{super()}}
+<link href="{{url_for('.static', filename='css/style.css')}}" rel="stylesheet">
+{% endblock %}
+
+{% block navbar %}
+    <div class="logo-header navbar-static-top">
+        <a href="{{url_for('.simple')}}"><img src="{{url_for('.static', filename='images/logo.png')}}"></a>
+        <p>Web & Mobile Development</p>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <footer>
+        <div class="footer navbar-fixed-bottom">
+            <p>s.r.o. Lublaňská 1730/21, Praha2, 120 00 | IČO: 24677671 Č: CZ24677671 Account: 5337925001/5500</p>
+        </div>
+    </footer>
+{% endblock %}

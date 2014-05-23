@@ -1,0 +1,35 @@
+.logo-header {
+    background-color: #4B831E;
+    color: #FFF;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px;
+}
+.logo-header img {
+    max-height: 105px;
+    margin-left: 15px;
+    margin-bottom: 10px;
+}
+.footer {
+    padding: 15px;
+    background-color: #323232;
+    text-align: center;
+    color: #969696;
+}
+.content-container {
+    margin-top: 20px;
+    margin-bottom: 100px;
+    padding: 0 20px 0 20px;
+}
+
+@media screen and (max-width: 562px) {
+  .logo-header img {
+    width: 100%;
+    margin-left: 0px;
+  }
+}
+
+a, .btn-link { color: #4A831E; }
+.btn-primary { background-color: #4A831E; border-color: #4A831E; }
+a:hover, a:focus, .btn-link:hover, .btn-link:focus { color: #2C550A; }
+.btn-primary:hover, .btn-primary:focus { background-color: #2C550A; border-color: #2C550A;  }

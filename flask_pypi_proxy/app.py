@@ -7,6 +7,8 @@ import os
 import json
 import logging
 from flask import Flask
+from flask_bootstrap import Bootstrap
+
 
 def read_configuration(app, pypi_url='http://pypi.python.org',
                        private_eggs=[]):
@@ -92,6 +94,7 @@ def configure_logging(app):
                             level=getattr(logging, app.config['LOGGING_LEVEL']),
                             format='%(asctime)s [%(levelname)s] %(message)s')
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path="/static", static_folder="static")
 read_configuration(app)
 configure_logging(app)
+Bootstrap(app)

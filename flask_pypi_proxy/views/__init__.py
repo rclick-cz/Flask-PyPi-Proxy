@@ -7,4 +7,6 @@ import flask_pypi_proxy.views.simple
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    # Note dev only
+    app.run(debug=True)
+#     app.run(debug=True, host='0.0.0.0')

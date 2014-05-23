@@ -16,7 +16,8 @@ setup(
         "Flask",
         "requests",
         "python-magic",
-        "beautifulsoup4"
+        "beautifulsoup4",
+        "flask-bootstrap"
     ],
     packages=find_packages(),
     include_package_data=True,
