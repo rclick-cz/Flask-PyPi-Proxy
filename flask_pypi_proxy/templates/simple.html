@@ -8,10 +8,12 @@
     <div class="container content-container">
 
         <h1>List of packages</h1>
-    <hr>
-        {% for package_name in packages %}
-          <p><a href="{{ url_for('simple_package', package_name=package_name) }}">{{ package_name }}</a></p>
-        {% endfor %}
+
+        <hr>
+            {% for package_name in packages %}
+                <p><a href="{{ url_for('simple_package', package_name=package_name) }}">{{ package_name }}</a></p>
+            {% endfor %}
+        <hr>
 
     </div>
 {{super()}}

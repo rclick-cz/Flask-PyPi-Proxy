@@ -11,7 +11,7 @@ from os import listdir
 from os.path import join, exists, basename
 
 from bs4 import BeautifulSoup
-from flask import abort, render_template
+from flask import abort, render_template, redirect, url_for
 from requests import get
 
 from flask_pypi_proxy.app import app
@@ -20,6 +20,14 @@ from flask_pypi_proxy.utils import (get_package_path, get_base_path,
 
 
 VersionData = namedtuple('VersionData', ['name', 'md5', 'external_link'])
+
+
+@app.route('/')
+def root_url():
+    """
+    home address will only redirect to /simple/
+    """
+    return redirect(url_for(".simple"))
 
 
 @app.route('/simple/')
