@@ -11,8 +11,9 @@ from os import listdir
 from os.path import join, exists, basename
 
 from bs4 import BeautifulSoup
-from flask import abort, render_template, redirect, url_for
+from flask import abort, render_template, redirect, url_for, request
 from requests import get
+from package import package
 
 from flask_pypi_proxy.app import app
 from flask_pypi_proxy.utils import (get_package_path, get_base_path,
@@ -30,6 +31,56 @@ def root_url():
     return redirect(url_for(".simple"))
 
 
+@app.route('/download/', methods=['GET', 'POST'])
+def force_download():
+    """
+    address where you can tell server to force download package
+    """
+    if request.method == 'POST':
+        form_package = request.form.get('package')
+        if not form_package:
+            return render_add_template("You have to fill package name.",
+                                       "danger")
+
+        data = simple_package(form_package, True)
+        #todo: data not found
+        versions = data.get('versions')
+
+        #======================================================================
+        form_version = request.form.get('version')
+        if form_version:
+            pass
+            # #todo: if condition
+            # if form_version not in versions:
+            #     render_add_template("Given version not found.", "danger")
+
+        for version in versions:
+            package_version = version
+        #======================================================================
+        #todo: need decode
+        package_version.external_link
+
+        code = package(
+            "source", data.get('source_letter'), data.get('package_name'),
+            package_version.name, package_version.external_link,
+            return_code=True)
+
+        if code == 200:
+            return render_add_template(
+                "Package already exists.", "info")
+        if code == 201:
+            return render_add_template(
+                "You have successfully added new package.", "success")
+    return render_add_template()
+
+
+def render_add_template(text=None, alert=None):
+    """
+    will render simple_add.html - possibly with text and alert if given
+    """
+    return render_template('simple_add.html', rtext=text, raler=alert)
+
+
 @app.route('/simple/')
 def simple():
     ''' Return the template which list all the packages that are installed
@@ -43,7 +94,7 @@ def simple():
 
 
 @app.route('/simple/<package_name>/')
-def simple_package(package_name):
+def simple_package(package_name, return_only_data=False):
     ''' Given a package name, returns all the versions for downloading
     that package.
 
@@ -70,8 +121,10 @@ def simple_package(package_name):
     :param package_name: the name of the egg package. This is only the
                           name of the package with the version or anything
                           else.
+    :param return_only_data: booleean = choose if method should render template
+                             or return data
 
-    :return: a template with all the links to download the packages.
+    :return: a template with all the links to download the packages or data.
     '''
     app.logger.debug('Requesting index for: %s', package_name)
     package_folder = get_package_path(package_name)
@@ -101,7 +154,8 @@ def simple_package(package_name):
             data = VersionData(name, md5, None)
             package_versions.append(data)
 
-        return render_template('simple_package.html', **template_data)
+        return template_data if return_only_data else \
+            render_template('simple_package.html', **template_data)
     else:
         app.logger.debug('Didnt found package: %s in local repository. '
                          'Using proxy.', package_name)
@@ -209,7 +263,8 @@ def simple_package(package_name):
             package_name=package_name,
             versions=package_versions
         )
-        return render_template('simple_package.html', **template_data)
+        return template_data if return_only_data else \
+            render_template('simple_package.html', **template_data)
 
 
 def find_external_links(url):
