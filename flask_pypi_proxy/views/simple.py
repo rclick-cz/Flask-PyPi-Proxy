@@ -18,6 +18,8 @@ from package import package
 from flask_pypi_proxy.app import app
 from flask_pypi_proxy.utils import (get_package_path, get_base_path,
                                     is_private, url_is_egg_file)
+import re
+from werkzeug import exceptions
 
 
 VersionData = namedtuple('VersionData', ['name', 'md5', 'external_link'])
@@ -42,43 +44,63 @@ def force_download():
             return render_add_template("You have to fill package name.",
                                        "danger")
 
-        data = simple_package(form_package, True)
-        #todo: data not found
+        try:
+            data = simple_package(form_package, True)
+        except exceptions.NotFound:
+            return render_add_template("Package not found.", "danger")
+
         versions = data.get('versions')
 
-        #======================================================================
-        form_version = request.form.get('version')
-        if form_version:
-            pass
-            # #todo: if condition
-            # if form_version not in versions:
-            #     render_add_template("Given version not found.", "danger")
+        form_version = str(request.form.get('version'))
+        highest_dig = -1
+        package_version = None
+        name_dig_list = []
 
         for version in versions:
-            package_version = version
-        #======================================================================
-        #todo: need decode
-        package_version.external_link
+            name = str(version.name)
+            if name.endswith(".whl"):
+                continue
+
+            name_digonly = re.sub("[^0123456789\.]", "", name)
+            name_dig_pretty = name_digonly.replace("..", "")
+            name_dig_list.append(name_dig_pretty)
+
+            if form_version:
+                if form_version == name_dig_pretty:
+                    package_version = version
+            else:
+                if name_dig_pretty > highest_dig:
+                    highest_dig = name_dig_pretty
+                    package_version = version
+
+        if not package_version:
+            return render_add_template(
+                "Given version not found.", "danger",
+                "Available versions:\n{}".format(name_dig_list), "info")
 
         code = package(
             "source", data.get('source_letter'), data.get('package_name'),
-            package_version.name, package_version.external_link,
+            package_version.name,
+            urlparse.parse_qs(package_version.external_link).get('remote')[0],
             return_code=True)
 
         if code == 200:
             return render_add_template(
-                "Package already exists.", "info")
+                "Package already exists. ({})".format(name), "info")
         if code == 201:
             return render_add_template(
-                "You have successfully added new package.", "success")
+                "You have successfully added new package ({})".format(name),
+                "success")
     return render_add_template()
 
 
-def render_add_template(text=None, alert=None):
+def render_add_template(text1=None, alert1=None, text2=None, alert2=None):
     """
     will render simple_add.html - possibly with text and alert if given
     """
-    return render_template('simple_add.html', rtext=text, raler=alert)
+    return render_template('simple_add.html',
+                           rtext1=text1, raler1=alert1,
+                           rtext2=text2, raler2=alert2)
 
 
 @app.route('/simple/')

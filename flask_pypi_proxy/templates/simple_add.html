@@ -11,10 +11,17 @@
 
         <hr>
 
-        {% if rtext and raler %}
-            <div class="alert alert-{{ raler }} alert-dismissable">
+        {% if rtext1 and raler1 %}
+            <div class="alert alert-{{ raler1 }} alert-dismissable">
                 <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                {{ rtext }}
+                {{ rtext1 }}
+            </div>
+        {% endif %}
+
+        {% if rtext2 and raler2 %}
+            <div class="alert alert-{{ raler2 }} alert-dismissable">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                {{ rtext2 }}
             </div>
         {% endif %}
 
