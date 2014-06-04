@@ -11,15 +11,96 @@ from os import listdir
 from os.path import join, exists, basename
 
 from bs4 import BeautifulSoup
-from flask import abort, render_template
+from flask import abort, render_template, redirect, url_for, request
 from requests import get
+from package import package
 
 from flask_pypi_proxy.app import app
 from flask_pypi_proxy.utils import (get_package_path, get_base_path,
                                     is_private, url_is_egg_file)
+import re
+from werkzeug import exceptions
 
 
 VersionData = namedtuple('VersionData', ['name', 'md5', 'external_link'])
+
+
+@app.route('/')
+def root_url():
+    """
+    home address will only redirect to /simple/
+    """
+    return redirect(url_for(".simple"))
+
+
+@app.route('/download/', methods=['GET', 'POST'])
+def force_download():
+    """
+    address where you can tell server to force download package
+    """
+    if request.method == 'POST':
+        form_package = request.form.get('package')
+        if not form_package:
+            return render_add_template("You have to fill package name.",
+                                       "danger")
+
+        try:
+            data = simple_package(form_package, True)
+        except exceptions.NotFound:
+            return render_add_template("Package not found.", "danger")
+
+        versions = data.get('versions')
+
+        form_version = str(request.form.get('version'))
+        highest_dig = -1
+        package_version = None
+        name_dig_list = []
+
+        for version in versions:
+            name = str(version.name)
+            if name.endswith(".whl"):
+                continue
+
+            name_digonly = re.sub("[^0123456789\.]", "", name)
+            name_dig_pretty = name_digonly.replace("..", "")
+            name_dig_list.append(name_dig_pretty)
+
+            if form_version:
+                if form_version == name_dig_pretty:
+                    package_version = version
+            else:
+                if name_dig_pretty > highest_dig:
+                    highest_dig = name_dig_pretty
+                    package_version = version
+
+        if not package_version:
+            return render_add_template(
+                "Given version not found.", "danger",
+                "Available versions:\n{}".format(name_dig_list), "info")
+
+        code = package(
+            "source", data.get('source_letter'), data.get('package_name'),
+            package_version.name,
+            urlparse.parse_qs(package_version.external_link).get('remote')[0],
+            return_code=True)
+
+        if code == 200:
+            return render_add_template(
+                "Package already exists. ({})".format(name), "info")
+        if code == 201:
+            return render_add_template(
+                "You have successfully added new package ({})".format(name),
+                "success")
+    return render_add_template()
+
+
+def render_add_template(text1=None, alert1=None, text2=None, alert2=None):
+    """
+    will render simple_add.html - possibly with text and alert if given
+    """
+    return render_template('simple_add.html',
+                           rtext1=text1, raler1=alert1,
+                           rtext2=text2, raler2=alert2)
 
 
 @app.route('/simple/')
@@ -35,7 +116,7 @@ def simple():
 
 
 @app.route('/simple/<package_name>/')
-def simple_package(package_name):
+def simple_package(package_name, return_only_data=False):
     ''' Given a package name, returns all the versions for downloading
     that package.
 
@@ -62,8 +143,10 @@ def simple_package(package_name):
     :param package_name: the name of the egg package. This is only the
                           name of the package with the version or anything
                           else.
+    :param return_only_data: booleean = choose if method should render template
+                             or return data
 
-    :return: a template with all the links to download the packages.
+    :return: a template with all the links to download the packages or data.
     '''
     app.logger.debug('Requesting index for: %s', package_name)
     package_folder = get_package_path(package_name)
@@ -93,7 +176,8 @@ def simple_package(package_name):
             data = VersionData(name, md5, None)
             package_versions.append(data)
 
-        return render_template('simple_package.html', **template_data)
+        return template_data if return_only_data else \
+            render_template('simple_package.html', **template_data)
     else:
         app.logger.debug('Didnt found package: %s in local repository. '
                          'Using proxy.', package_name)
@@ -201,7 +285,8 @@ def simple_package(package_name):
             package_name=package_name,
             versions=package_versions
         )
-        return render_template('simple_package.html', **template_data)
+        return template_data if return_only_data else \
+            render_template('simple_package.html', **template_data)
 
 
 def find_external_links(url):

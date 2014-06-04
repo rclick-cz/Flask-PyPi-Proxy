@@ -25,3 +25,7 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+flask_pypi_proxy/settings
+.idea
+*.log

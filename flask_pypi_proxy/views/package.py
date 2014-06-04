@@ -19,7 +19,8 @@ from requests import get, head
 
 @app.route('/packages/<package_type>/<letter>/<package_name>/<package_file>',
            methods=['GET', 'HEAD'])
-def package(package_type, letter, package_name, package_file):
+def package(package_type, letter, package_name, package_file, remote=None,
+            return_code=False):
     ''' Downloads the egg
 
     :param str package_type: the nature of the package. For example:
@@ -29,9 +30,13 @@ def package(package_type, letter, package_name, package_file):
     :param str package_name: the name of the package. For example: Django
     :param str package_file: the name of the package and it's version. For
                              example: Django-1.5.0.tar.gz
+    :param int return_code: return status codes
     '''
     egg_filename = join(get_base_path(), package_name, package_file)
-    url = request.args.get('remote')
+    if not remote:
+        url = request.args.get('remote')
+    else:
+        url = remote
 
     if request.method == 'HEAD':
         # in this case the content type of the file is what is
@@ -53,7 +58,7 @@ def package(package_type, letter, package_name, package_file):
         with open(path, 'rb') as egg:
             content = egg.read(-1)
         mimetype = magic.from_file(egg_filename, mime=True)
-        return _respond(content, mimetype)
+        return 200 if return_code else _respond(content, mimetype)
 
     else:
         # Downloads the egg from pypi and saves it locally, then
@@ -83,8 +88,7 @@ def package(package_type, letter, package_name, package_file):
         with open(egg_filename + '.md5', 'w') as md5_output:
             md5 = get_md5_for_content(filecontent)
             md5_output.write(md5)
-
-        return _respond(filecontent, mimetype)
+        return 201 if return_code else _respond(filecontent, mimetype)
 
 
 def _respond(filecontent, mimetype):

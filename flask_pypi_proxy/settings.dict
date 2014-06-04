@@ -1,0 +1,5 @@
+{
+    "BASE_FOLDER_PATH": "full_patch_to_eggs",
+    "PRIVATE_EGGS": [],
+    "LOGGING_PATH": "full_patch_to_logger_file"
+}

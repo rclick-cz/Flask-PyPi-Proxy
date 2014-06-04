@@ -10,7 +10,7 @@ as any other Flask application. For more information, you can check here:
 Configuration
 =============
 
-The project uses the environment key **PYPI_PROXY_CONFIG_FILE** that references
+The project uses the environment key **FLASK_PYPI_PROXY_CONFIG** that references
 the path where the configuration file is. This file is in JSON format with the
 following keys:
 
